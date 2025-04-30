@@ -65,7 +65,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var Collection<int, promotion>
      */
-    #[ORM\ManyToMany(targetEntity: promotion::class, inversedBy: 'users')]
+    #[ORM\ManyToMany(targetEntity: Promotion::class, inversedBy: 'users')]
     private Collection $promotions;
 
     public function __construct()
