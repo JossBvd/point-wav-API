@@ -31,13 +31,13 @@ final class UserController extends AbstractController
             'lastName' => $user->getLastName(),
             'email' => $user->getEmail(),
             'roles' => $user->getRoles(),
-            'birthday' => $user->getBirthday() ? $user->getBirthday()->format('Y-m-d') : null,
+            'birthday' => $user->getBirthday()->format('d-m-Y'),
             'address' => $user->getAddress(),
-            'registrationDate' => $user->getRegistrationDate()->format('Y-m-d H:i:s'),
+            'registrationDate' => $user->getRegistrationDate()->format('d-m-Y'),
             'isVerified' => $user->isVerified(),
             'isActive' => $user->isActive()
         ];
-    
+
         return new JsonResponse($data, JsonResponse::HTTP_OK);
     }
 
@@ -63,10 +63,24 @@ final class UserController extends AbstractController
         if (isset($data['address'])) {
             $user->setAddress($data['address']);
         }
-    
+
         $em->flush();
 
-        return new JsonResponse(['status' => 'Utilisateur modifié'], JsonResponse::HTTP_OK);
+        return new JsonResponse([
+            'status' => 'Utilisateur modifié',
+            'utilisateur' => [
+                'id' => $user->getId(),
+                'firstName' => $user->getFirstName(),
+                'lastName' => $user->getLastName(),
+                'email' => $user->getEmail(),
+                'roles' => $user->getRoles(),
+                'birthday' => $user->getBirthday(),
+                'address' => $user->getAddress(),
+                'registrationDate' => $user->getRegistrationDate()->format('d-m-Y'),
+                'isVerified' => $user->isVerified(),
+                'isActive' => $user->isActive()
+            ]
+        ], JsonResponse::HTTP_OK);
     }
 
     #[Route('/api/user', name: 'delete_me', methods: ['DELETE'])]
@@ -85,7 +99,7 @@ final class UserController extends AbstractController
 
     /*
         ROLE_ADMIN
-    */ 
+    */
     #[Route('/api/admin/user', name: 'get_users', methods: ['GET'])]
     public function getUsers(UserRepository $userRepo): JsonResponse
     {
@@ -118,26 +132,26 @@ final class UserController extends AbstractController
 
     #[Route('/api/admin/user/{id}', name: 'get_one_user', methods: ['GET'])]
     public function getOneUser(UserRepository $userRepo, int $id): JsonResponse
-{
-    $user = $userRepo->find($id);
-    
-    if (!$user) {
-        return new JsonResponse(['error' => 'Utilisateur non trouvé'], JsonResponse::HTTP_NOT_FOUND);
+    {
+        $user = $userRepo->find($id);
+
+        if (!$user) {
+            return new JsonResponse(['error' => 'Utilisateur non trouvé'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $data = [
+            'id' => $user->getId(),
+            'firstName' => $user->getFirstName(),
+            'lastName' => $user->getLastName(),
+            'email' => $user->getEmail(),
+            'roles' => $user->getRoles(),
+            'birthday' => $user->getBirthday(),
+            'address' => $user->getAddress(),
+            'registrationDate' => $user->getRegistrationDate()->format('Y-m-d H:i:s'),
+            'isVerified' => $user->isVerified(),
+            'isActive' => $user->isActive()
+        ];
+
+        return new JsonResponse($data, JsonResponse::HTTP_OK);
     }
-
-    $data = [
-        'id' => $user->getId(),
-        'firstName' => $user->getFirstName(),
-        'lastName' => $user->getLastName(),
-        'email' => $user->getEmail(),
-        'roles' => $user->getRoles(),
-        'birthday' => $user->getBirthday(),
-        'address' => $user->getAddress(),
-        'registrationDate' => $user->getRegistrationDate()->format('Y-m-d H:i:s'),
-        'isVerified' => $user->isVerified(),
-        'isActive' => $user->isActive()
-    ];
-
-    return new JsonResponse($data, JsonResponse::HTTP_OK);
-}
 }
