@@ -50,6 +50,9 @@ security:
     access_control:
     # - { path: ^/api/login_check, roles: IS_AUTHENTICATED_ANONYMOUSLY }
     - { path: ^/api/product, roles: PUBLIC_ACCESS }
+    - { path: ^/api/category, roles: PUBLIC_ACCESS }
+    - { path: ^/api/checkout, roles: IS_AUTHENTICATED }
+    - { path: ^/api/order, roles: IS_AUTHENTICATED }
     - { path: ^/api/order, roles: ROLE_USER }
     - { path: ^/api/admin, roles: [ROLE_ADMIN, ROLE_SUPER_ADMIN] }
 
