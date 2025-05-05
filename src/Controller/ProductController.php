@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use App\Entity\Category;
 use App\Entity\Image;
 use App\Entity\Product;
 use App\Repository\CategoryRepository;
@@ -245,7 +244,7 @@ final class ProductController extends AbstractController
 
             $em->persist($image);
             $em->flush();
-        
+
             return new JsonResponse(['message' => 'Image ajoutée au produit avec succès'], JsonResponse::HTTP_OK);
         } catch (\Exception $e) {
             return new JsonResponse([
@@ -253,21 +252,4 @@ final class ProductController extends AbstractController
             ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-
-    // #[Route('/api/admin/product/{id}/delete-image', name: 'delete_image_product', methods: ['DELETE'])]
-    // public function deleteImageProduct(Request $rq, EntityManagerInterface $em, ProductRepository $productRepo, int $id): JsonResponse
-    // {
-    //     try {
-    //         $product = $productRepo->find($id);
-
-            
-        
-    //         return new JsonResponse(['message' => 'Image supprimée avec succès'], JsonResponse::HTTP_OK);
-    //     } catch (\Exception $e) {
-    //         return new JsonResponse([
-    //             'error' => 'Erreur lors de la suppression d\image'
-    //         ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
-    //     }
-    // }
-
 }

@@ -18,7 +18,7 @@ class Promotion
     #[ORM\Column(length: 50)]
     private ?string $name = null;
 
-    #[ORM\Column(length: 50)]
+    #[ORM\Column(length: 50, unique: true)]
     private ?string $code = null;
 
     #[ORM\Column(length: 50)]
@@ -145,6 +145,13 @@ class Promotion
 
         return $this;
     }
+
+    public function isCurrentlyActive(): bool
+    {
+        $now = new \DateTime();
+        return $this->getStartDate() <= $now && $this->getEndDate() >= $now;
+    }
+
 
     public function getRegistrationDate(): ?\DateTimeImmutable
     {

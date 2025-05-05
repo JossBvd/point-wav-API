@@ -136,7 +136,7 @@ final class ImageController extends AbstractController
 
             return new JsonResponse(['status' => 'Image supprimée'], JsonResponse::HTTP_OK);
         } catch (Exception $e) {
-            return new JsonResponse(['error' => 'Une erreur est survenue lors de la suppression de l\'image', $e->getMessage()], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['error' => 'Une erreur est survenue lors de la suppression de l\'image'], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }
