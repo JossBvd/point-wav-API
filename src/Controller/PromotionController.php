@@ -115,11 +115,11 @@ final class PromotionController extends AbstractController
     }
 
     #[Route('/api/admin/promotion/{id}', name: 'delete_promotion', methods: ['DELETE'])]
-    public function deletePromotion(Request $rq, EntityManagerInterface $em, PromotionRepository $promotionRepo, int $id): JsonResponse
+    public function deletePromotion(EntityManagerInterface $em, PromotionRepository $promotionRepo, int $id): JsonResponse
     {
         try {
             $promotion = $promotionRepo->find($id);
-            
+
             if ($promotion->getOrders() && !$promotion->getOrders()->isEmpty()) {
                 return new JsonResponse([
                     'error' => 'Impossible de supprimer la promotion car elle a déjà été utilisée pour une commande'
