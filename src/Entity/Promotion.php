@@ -51,10 +51,17 @@ class Promotion
     #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'promotions')]
     private Collection $users;
 
+    /**
+     * @var Collection<int, PromotionUser>
+     */
+    #[ORM\OneToMany(targetEntity: PromotionUser::class, mappedBy: 'promotion')]
+    private Collection $promotionUsers;
+
     public function __construct()
     {
         $this->orders = new ArrayCollection();
         $this->users = new ArrayCollection();
+        $this->promotionUsers = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -217,6 +224,36 @@ class Promotion
     {
         if ($this->users->removeElement($user)) {
             $user->removePromotions($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PromotionUser>
+     */
+    public function getPromotionUsers(): Collection
+    {
+        return $this->promotionUsers;
+    }
+
+    public function addPromotionUser(PromotionUser $promotionUser): static
+    {
+        if (!$this->promotionUsers->contains($promotionUser)) {
+            $this->promotionUsers->add($promotionUser);
+            $promotionUser->setPromotion($this);
+        }
+
+        return $this;
+    }
+
+    public function removePromotionUser(PromotionUser $promotionUser): static
+    {
+        if ($this->promotionUsers->removeElement($promotionUser)) {
+            // set the owning side to null (unless already changed)
+            if ($promotionUser->getPromotion() === $this) {
+                $promotionUser->setPromotion(null);
+            }
         }
 
         return $this;

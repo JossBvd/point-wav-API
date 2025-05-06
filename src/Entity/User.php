@@ -68,10 +68,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\ManyToMany(targetEntity: Promotion::class, inversedBy: 'users')]
     private Collection $promotions;
 
+    /**
+     * @var Collection<int, PromotionUser>
+     */
+    #[ORM\OneToMany(targetEntity: PromotionUser::class, mappedBy: 'user')]
+    private Collection $promotionUsers;
+
     public function __construct()
     {
         $this->orders = new ArrayCollection();
         $this->promotions = new ArrayCollection();
+        $this->promotionUsers = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -281,6 +288,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function removePromotions(promotion $promotions): static
     {
         $this->promotions->removeElement($promotions);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PromotionUser>
+     */
+    public function getPromotionUsers(): Collection
+    {
+        return $this->promotionUsers;
+    }
+
+    public function addPromotionUser(PromotionUser $promotionUser): static
+    {
+        if (!$this->promotionUsers->contains($promotionUser)) {
+            $this->promotionUsers->add($promotionUser);
+            $promotionUser->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removePromotionUser(PromotionUser $promotionUser): static
+    {
+        if ($this->promotionUsers->removeElement($promotionUser)) {
+            // set the owning side to null (unless already changed)
+            if ($promotionUser->getUser() === $this) {
+                $promotionUser->setUser(null);
+            }
+        }
 
         return $this;
     }

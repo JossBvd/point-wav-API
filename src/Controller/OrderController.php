@@ -4,8 +4,10 @@ namespace App\Controller;
 
 use App\Entity\Order;
 use App\Entity\OrderProduct;
+use App\Entity\PromotionUser;
 use App\Repository\OrderRepository;
 use App\Repository\ProductRepository;
+use App\Repository\PromotionRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,7 +21,7 @@ final class OrderController extends AbstractController
         IS_AUTHENTICATED
     */
     #[Route('/api/checkout', name: 'checkout_order', methods: ['POST'])]
-    public function checkout(Request $rq, ProductRepository $productRepo, EntityManagerInterface $em): JsonResponse
+    public function checkout(Request $rq, ProductRepository $productRepo, EntityManagerInterface $em, PromotionRepository $promoRepo): JsonResponse
     {
         try {
             $user = $this->getUser();
@@ -58,6 +60,40 @@ final class OrderController extends AbstractController
 
 
                 $total += $product->getPrice() * $item['quantity'];
+            }
+
+            if (isset($data['promotion'])) {
+                $promotionCode = $data['promotion'];
+                $promotion = $promoRepo->findOneBy(['code' => $promotionCode]);
+                if (!$promotion || !$promotion->isCurrentlyActive()) {
+                    return new JsonResponse(['error' => 'Code promotionnel invalide ou expiré'], JsonResponse::HTTP_BAD_REQUEST);
+                }
+                $alreadyUsed = $em->getRepository(PromotionUser::class)->findOneBy([
+                    'promotion' => $promotion,
+                    'user' => $user
+                ]);
+                
+                if ($alreadyUsed) {
+                    return new JsonResponse([
+                        'error' => 'Cette promotion a déjà été utilisée'
+                    ], JsonResponse::HTTP_FORBIDDEN);
+                }
+                $reduction = 0;
+                if ($promotion->getReductionType() === 'percentage') {
+                    $reduction = ($total * $promotion->getReductionValue()) / 100;
+                } elseif ($promotion->getReductionType() === 'fixed') {
+                    $reduction = $promotion->getReductionValue();
+                }
+
+                $total = max(0, $total - $reduction);
+                $order->setPromotion($promotion);
+
+                $promotionUser = new PromotionUser();
+                $promotionUser->setPromotion($promotion);
+                $promotionUser->setUser($user);
+                $promotionUser->setUsedDate(new DateTimeImmutable());
+
+                $em->persist($promotionUser);
             }
 
             $order->setUser($user);
