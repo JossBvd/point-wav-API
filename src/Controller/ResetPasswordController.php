@@ -31,7 +31,7 @@ class ResetPasswordController extends AbstractController
     public function request(Request $request, UserRepository $userRepo): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        $email = $data['email'] ?? '';
+        $email = $data['email'];
 
         $user = $userRepo->findOneBy(['email' => $email]);
         if (!$user) {
@@ -40,7 +40,7 @@ class ResetPasswordController extends AbstractController
 
         try {
             $resetToken = $this->resetPasswordHelper->generateResetToken($user);
-        } catch (TooManyPasswordRequestsException $e) {
+        } catch (Exception $e) {
             return new JsonResponse([
                 'error:'.$e
             ], 500);
@@ -58,7 +58,7 @@ class ResetPasswordController extends AbstractController
 
         $this->mailer->send($emailMessage);
 
-        return new JsonResponse(['message' => 'Email envoyé si l’utilisateur existe.'], 200);
+        return new JsonResponse(['message' => 'Si cet email existe, un lien de réinitialisation a été envoyé'], 200);
 
     }
 
