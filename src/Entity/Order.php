@@ -25,7 +25,7 @@ class Order
     private ?OrderStatus $status = null;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $registrationDate = null;
+    private ?\DateTimeImmutable $createAt = null;
 
     /**
      * @var Collection<int, OrderProduct>
@@ -35,14 +35,27 @@ class Order
 
     #[ORM\ManyToOne(inversedBy: 'orders')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?user $user = null;
+    private ?User $user = null;
 
     #[ORM\ManyToOne(inversedBy: 'orders')]
-    private ?promotion $promotion = null;
+    private ?Promotion $promotion = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $stripeSessionId = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $stripePaymentId = null;
+
+    #[ORM\Column]
+    private ?bool $isPaid = false;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $paidAt = null;
 
     public function __construct()
     {
         $this->orderProducts = new ArrayCollection();
+        $this->createAt = new \DateTimeImmutable();
     }
 
     public function getId(): ?int
@@ -74,14 +87,14 @@ class Order
         return $this;
     }
 
-    public function getRegistrationDate(): ?\DateTimeImmutable
+    public function getCreateAt(): ?\DateTimeImmutable
     {
-        return $this->registrationDate;
+        return $this->createAt;
     }
 
-    public function setRegistrationDate(\DateTimeImmutable $registrationDate): static
+    public function setCreateAt(\DateTimeImmutable $createAt): static
     {
-        $this->registrationDate = $registrationDate;
+        $this->createAt = $createAt;
 
         return $this;
     }
@@ -136,6 +149,54 @@ class Order
     public function setPromotion(?promotion $promotion): static
     {
         $this->promotion = $promotion;
+
+        return $this;
+    }
+
+    public function getStripeSessionId(): ?string
+    {
+        return $this->stripeSessionId;
+    }
+
+    public function setStripeSessionId(?string $stripeSessionId): static
+    {
+        $this->stripeSessionId = $stripeSessionId;
+
+        return $this;
+    }
+
+    public function getStripePaymentId(): ?string
+    {
+        return $this->stripePaymentId;
+    }
+
+    public function setStripePaymentId(?string $stripePaymentId): static
+    {
+        $this->stripePaymentId = $stripePaymentId;
+
+        return $this;
+    }
+
+    public function isPaid(): ?bool
+    {
+        return $this->isPaid;
+    }
+
+    public function setIsPaid(bool $isPaid): static
+    {
+        $this->isPaid = $isPaid;
+
+        return $this;
+    }
+
+    public function getPaidAt(): ?\DateTimeImmutable
+    {
+        return $this->paidAt;
+    }
+
+    public function setPaidAt(?\DateTimeImmutable $paidAt): static
+    {
+        $this->paidAt = $paidAt;
 
         return $this;
     }

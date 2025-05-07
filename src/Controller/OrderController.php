@@ -5,15 +5,19 @@ namespace App\Controller;
 use App\Entity\Order;
 use App\Entity\OrderProduct;
 use App\Entity\PromotionUser;
+use App\Enum\OrderStatus;
+use App\Enum\Reduction;
 use App\Repository\OrderRepository;
 use App\Repository\ProductRepository;
 use App\Repository\PromotionRepository;
+use App\Service\StripeService;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 final class OrderController extends AbstractController
 {
@@ -21,7 +25,7 @@ final class OrderController extends AbstractController
         IS_AUTHENTICATED
     */
     #[Route('/api/checkout', name: 'checkout_order', methods: ['POST'])]
-    public function checkout(Request $rq, ProductRepository $productRepo, EntityManagerInterface $em, PromotionRepository $promoRepo): JsonResponse
+    public function checkout(Request $rq, ProductRepository $productRepo, EntityManagerInterface $em, PromotionRepository $promoRepo, StripeService $stripeService): JsonResponse
     {
         try {
             $user = $this->getUser();
@@ -72,16 +76,16 @@ final class OrderController extends AbstractController
                     'promotion' => $promotion,
                     'user' => $user
                 ]);
-                
+
                 if ($alreadyUsed) {
                     return new JsonResponse([
                         'error' => 'Cette promotion a déjà été utilisée'
                     ], JsonResponse::HTTP_FORBIDDEN);
                 }
                 $reduction = 0;
-                if ($promotion->getReductionType() === 'percentage') {
+                if ($promotion->getReductionType() === Reduction::PERCENTAGE) {
                     $reduction = ($total * $promotion->getReductionValue()) / 100;
-                } elseif ($promotion->getReductionType() === 'fixed') {
+                } elseif ($promotion->getReductionType() === Reduction::AMOUNT) {
                     $reduction = $promotion->getReductionValue();
                 }
 
@@ -98,14 +102,31 @@ final class OrderController extends AbstractController
 
             $order->setUser($user);
             $order->setTotalPrice($total);
-            $order->setStatus('PENDING');
-            $order->setRegistrationDate(new DateTimeImmutable());
+            $order->setStatus(OrderStatus::IN_PROGRESS);
+            $order->setCreateAt(new DateTimeImmutable());
 
             $em->persist($order);
             $em->flush();
 
 
-            return new JsonResponse(['message' => 'Commande validée avec succès'], JsonResponse::HTTP_OK);
+            $successUrl = $this->generateUrl('app_payment_success', [
+                'orderId' => $order->getId(),
+            ], UrlGeneratorInterface::ABSOLUTE_URL);
+
+            $cancelUrl = $this->generateUrl('app_payment_cancel', [], UrlGeneratorInterface::ABSOLUTE_URL);
+
+
+            $session = $stripeService->createCheckoutSession(
+                $total,
+                'Commande #' . $order->getId(),
+                $successUrl,
+                $cancelUrl
+            );
+
+            $order->setStripeSessionId($session->id);
+            $em->flush();
+
+            return new JsonResponse(['checkout_url' => $session->url], JsonResponse::HTTP_OK);
         } catch (\Exception $e) {
             return new JsonResponse([
                 'error' => 'Erreur lors de la validation de la commande'
@@ -127,7 +148,7 @@ final class OrderController extends AbstractController
                     'promotion_id' => $order->getPromotion(),
                     'total_price' => $order->getTotalPrice(),
                     'status' => $order->getStatus(),
-                    'registration_date' => $order->getRegistrationDate(),
+                    'registration_date' => $order->getCreateAt(),
                 ];
             }, $orders);
             return new JsonResponse($data, JsonResponse::HTTP_OK);
@@ -153,7 +174,7 @@ final class OrderController extends AbstractController
                     'promotion_id' => $order->getPromotion(),
                     'total_price' => $order->getTotalPrice(),
                     'status' => $order->getStatus(),
-                    'registration_date' => $order->getRegistrationDate(),
+                    'registration_date' => $order->getCreateAt(),
                 ];
             }, $orders);
             return new JsonResponse($data, JsonResponse::HTTP_OK);
