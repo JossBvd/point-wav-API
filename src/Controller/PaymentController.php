@@ -33,7 +33,7 @@ final class PaymentController extends AbstractController
         return new JsonResponse('Paiement annulé. Vous pouvez réessayer.');
     }
 
-    #[Route('/api/webhook/stripe', name: 'app_webhook_stripe', methods: ['POST'])]
+    #[Route('/api/webhook', name: 'app_webhook_stripe', methods: ['POST'])]
     public function stripeWebhook(
         Request $request,
         StripeService $stripeService,
