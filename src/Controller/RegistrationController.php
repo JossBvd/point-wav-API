@@ -61,7 +61,7 @@ class RegistrationController extends AbstractController
 
             $signedUrl = $signatureComponents->getSignedUrl();
 
-
+            
             $email = (new Email())
                 ->from('test@test.com')
                 ->to($user->getEmail())

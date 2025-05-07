@@ -40,4 +40,8 @@ class OrderRepository extends ServiceEntityRepository
     //            ->getOneOrNullResult()
     //        ;
     //    }
+    public function findByStripeSessionId(string $sessionId): ?Order
+    {
+        return $this->findOneBy(['stripeSessionId' => $sessionId]);
+    }
 }
