@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
 class Product
@@ -14,28 +15,36 @@ class Product
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['product:read', 'image:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups(['product:read', 'image:read'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups(['product:read', 'image:read'])]
     private ?string $brand = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Groups(['product:read'])]
     private ?string $description = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    #[Groups(['product:read'])]
     private ?string $price = null;
 
     #[ORM\Column]
+    #[Groups(['product:read'])]
     private ?int $stock = null;
 
     #[ORM\Column]
+    #[Groups(['product:read'])]
     private ?\DateTimeImmutable $registrationDate = null;
 
     #[ORM\ManyToOne(inversedBy: 'products')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['product:read'])]
     private ?Category $category = null;
 
     /**
@@ -51,6 +60,7 @@ class Product
     private Collection $orderProducts;
 
     #[ORM\Column]
+    #[Groups(['product:read'])]
     private ?bool $isActive = null;
 
     public function __construct()

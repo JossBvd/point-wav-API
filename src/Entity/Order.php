@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: OrderRepository::class)]
 #[ORM\Table(name: '`order`')]
@@ -16,15 +17,19 @@ class Order
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['order:read'])]
     private ?int $id = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    #[Groups(['order:read'])]
     private ?string $totalPrice = null;
 
     #[ORM\Column(type: 'string', enumType: OrderStatus::class)]
+    #[Groups(['order:read'])]
     private ?OrderStatus $status = null;
 
     #[ORM\Column]
+    #[Groups(['order:read'])]
     private ?\DateTimeImmutable $createAt = null;
 
     /**
@@ -35,9 +40,11 @@ class Order
 
     #[ORM\ManyToOne(inversedBy: 'orders')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['order:read'])]
     private ?User $user = null;
 
     #[ORM\ManyToOne(inversedBy: 'orders')]
+    #[Groups(['order:read'])]
     private ?Promotion $promotion = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -47,6 +54,7 @@ class Order
     private ?string $stripePaymentId = null;
 
     #[ORM\Column]
+    #[Groups(['order:read'])]
     private ?bool $isPaid = false;
 
     #[ORM\Column(nullable: true)]

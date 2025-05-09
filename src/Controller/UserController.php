@@ -1,11 +1,9 @@
 <?php
+// src/Controller/UserController.php
 
 namespace App\Controller;
 
-use App\Entity\User;
-use App\Repository\UserRepository;
-use DateTimeImmutable;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Service\UserService;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -14,144 +12,71 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class UserController extends AbstractController
 {
-    /*
-        ROLE_USER
-    */
+    public function __construct(private readonly UserService $userService) {}
+
     #[Route('/api/user', name: 'get_me', methods: ['GET'])]
     public function getMe(): JsonResponse
     {
-        $user = $this->getUser();
-        if (!$user) {
-            return new JsonResponse(['error' => 'Utilisateur non trouvé'], JsonResponse::HTTP_NOT_FOUND);
+        try {
+            $user = $this->userService->getMe();
+            return new JsonResponse($user, JsonResponse::HTTP_OK, [], true);
+        } catch (Exception $e) {
+            return new JsonResponse([
+                'error' => 'Erreur lors de la récupération de la liste des utilisateurs'
+            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        $data = [
-            'id' => $user->getId(),
-            'firstName' => $user->getFirstName(),
-            'lastName' => $user->getLastName(),
-            'email' => $user->getEmail(),
-            'roles' => $user->getRoles(),
-            'birthday' => $user->getBirthday()->format('d-m-Y'),
-            'address' => $user->getAddress(),
-            'registrationDate' => $user->getRegistrationDate()->format('d-m-Y'),
-            'isVerified' => $user->isVerified(),
-            'isActive' => $user->isActive()
-        ];
-
-        return new JsonResponse($data, JsonResponse::HTTP_OK);
     }
 
     #[Route('/api/user', name: 'update_me', methods: ['PUT'])]
-    public function updateMe(Request $rq, EntityManagerInterface $em): JsonResponse
+    public function updateMe(Request $request): JsonResponse
     {
-        $user = $this->getUser();
-        if (!$user) {
-            return new JsonResponse(['error' => 'Utilisateur non trouvé'], JsonResponse::HTTP_NOT_FOUND);
-        }
+        try {
+            $data = json_decode($request->getContent(), true);
+            $user = $this->userService->updateMe($data);
 
-        $data = json_decode($rq->getContent(), true);
-
-        if (isset($data['firstname'])) {
-            $user->setFirstname($data['firstname']);
+            return new JsonResponse($user, JsonResponse::HTTP_OK, [], true);
+        } catch (Exception $e) {
+            return new JsonResponse([
+                'error' => 'Erreur lors de la mise à jour de l\'utilisateur'
+            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
-        if (isset($data['lastname'])) {
-            $user->setLastname($data['lastname']);
-        }
-        if (isset($data['birthday'])) {
-            $user->setBirthday(new DateTimeImmutable($data['birthday']));
-        }
-        if (isset($data['address'])) {
-            $user->setAddress($data['address']);
-        }
-
-        $em->flush();
-
-        return new JsonResponse([
-            'status' => 'Utilisateur modifié',
-            'utilisateur' => [
-                'id' => $user->getId(),
-                'firstName' => $user->getFirstName(),
-                'lastName' => $user->getLastName(),
-                'email' => $user->getEmail(),
-                'roles' => $user->getRoles(),
-                'birthday' => $user->getBirthday(),
-                'address' => $user->getAddress(),
-                'registrationDate' => $user->getRegistrationDate()->format('d-m-Y'),
-                'isVerified' => $user->isVerified(),
-                'isActive' => $user->isActive()
-            ]
-        ], JsonResponse::HTTP_OK);
     }
 
     #[Route('/api/user', name: 'delete_me', methods: ['DELETE'])]
-    public function DeleteMe(EntityManagerInterface $em): JsonResponse
-    {
-        $user = $this->getUser();
-        if (!$user) {
-            return new JsonResponse(['error' => 'Utilisateur non trouvé'], JsonResponse::HTTP_NOT_FOUND);
-        }
-        $user->setIsActive(false);
-
-        $em->flush();
-
-        return new JsonResponse(['status' => 'Utilisateur supprimé'], JsonResponse::HTTP_OK);
-    }
-
-    /*
-        ROLE_ADMIN
-    */
-    #[Route('/api/admin/user', name: 'get_users', methods: ['GET'])]
-    public function getUsers(UserRepository $userRepo): JsonResponse
+    public function deleteMe(): JsonResponse
     {
         try {
-            $users = $userRepo->findAll();
-            if (!$users) {
-                return new JsonResponse(['error' => 'Liste utilisateurs non trouvée'], JsonResponse::HTTP_NOT_FOUND);
-            }
-
-            $data = array_map(function (User $user) {
-                return [
-                    'id' => $user->getId(),
-                    'firstName' => $user->getFirstName(),
-                    'lastName' => $user->getLastName(),
-                    'email' => $user->getEmail(),
-                    'roles' => $user->getRoles(),
-                    'birthday' => $user->getBirthday(),
-                    'address' => $user->getAddress(),
-                    'registrationDate' => $user->getRegistrationDate(),
-                    'isVerified' => $user->isVerified(),
-                    'isActive' => $user->isActive()
-
-                ];
-            }, $users);
-            return new JsonResponse($data, JsonResponse::HTTP_OK);
+            $userDeleted = $this->userService->deleteMe();
+            return match ($userDeleted) {
+                true => new JsonResponse(['message' => 'Utilisateur supprimé avec succès'], JsonResponse::HTTP_OK),
+                false => new JsonResponse(['error' => 'Impossible de récupérer l\'utilisateur'], JsonResponse::HTTP_INTERNAL_SERVER_ERROR)
+            };
         } catch (Exception $e) {
-            return new JsonResponse(['error' => 'Une erreur est survenue lors de la récupérations des utilisateurs'], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse([
+                'error' => 'Erreur lors de la suppression de l\'utilisateur'
+            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/api/admin/user', name: 'get_users', methods: ['GET'])]
+    public function getAllUsers(): JsonResponse
+    {
+        try {
+            $users = $this->userService->getAllUsers();
+            return new JsonResponse($users, JsonResponse::HTTP_OK, [], true);
+        } catch (\Exception) {
+            return new JsonResponse(['error' => 'Erreur lors de la récupération des utilisateurs'], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
     #[Route('/api/admin/user/{id}', name: 'get_one_user', methods: ['GET'])]
-    public function getOneUser(UserRepository $userRepo, int $id): JsonResponse
+    public function getUserById(int $id): JsonResponse
     {
-        $user = $userRepo->find($id);
-
-        if (!$user) {
-            return new JsonResponse(['error' => 'Utilisateur non trouvé'], JsonResponse::HTTP_NOT_FOUND);
+        try {
+            $user = $this->userService->getUserById($id);
+            return new JsonResponse($user, JsonResponse::HTTP_OK, [], true);
+        } catch (\Exception) {
+            return new JsonResponse(['error' => 'Erreur lors de la récupération de l\'utilisateur'], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        $data = [
-            'id' => $user->getId(),
-            'firstName' => $user->getFirstName(),
-            'lastName' => $user->getLastName(),
-            'email' => $user->getEmail(),
-            'roles' => $user->getRoles(),
-            'birthday' => $user->getBirthday(),
-            'address' => $user->getAddress(),
-            'registrationDate' => $user->getRegistrationDate()->format('Y-m-d H:i:s'),
-            'isVerified' => $user->isVerified(),
-            'isActive' => $user->isActive()
-        ];
-
-        return new JsonResponse($data, JsonResponse::HTTP_OK);
     }
 }
