@@ -53,6 +53,7 @@ class ResetPasswordController extends AbstractController
             ->htmlTemplate('emails/reset_password.html.twig')
             ->context([
                 'resetToken' => $resetToken->getToken(),
+                'expiration_date' => $resetToken->getExpiresAt(),
                 'resetUrl'   => sprintf('http://localhost:3000/reset-password/%s', $resetToken->getToken()),
             ]);
 
@@ -62,16 +63,26 @@ class ResetPasswordController extends AbstractController
 
     }
 
+    #[Route('/api/reset-password', name: 'get_reset_password', methods: ['GET'])]
+    public function resetPasswordd(  
+        Request $request,
+        ResetPasswordHelperInterface $helper,
+        UserPasswordHasherInterface $hasher,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        return new JsonResponse(['message' => 'Entrez votre nouveau mot de passe'], 200);
+    }
+
     #[Route('/api/reset-password', name: 'reset_password', methods: ['POST'])]
-    public function reset(  
+    public function resetPassword(  
         Request $request,
         ResetPasswordHelperInterface $helper,
         UserPasswordHasherInterface $hasher,
         EntityManagerInterface $em
     ): JsonResponse {
         $data = json_decode($request->getContent(), true);
-        $token       = $data['token'] ?? '';
-        $newPassword = $data['newPassword'] ?? '';
+        $token = $request->query->get('token');
+        $newPassword = $data['newPassword'];
 
         try {
             $user = $helper->validateTokenAndFetchUser($token);
