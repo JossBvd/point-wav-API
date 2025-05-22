@@ -45,4 +45,8 @@ services:
 
     App\Service\UserService: ~
     App\Service\OrderService: ~
+    App\Service\OrderProductService: ~
+    App\Service\PromotionService: ~
+    App\Service\PromotionUserService: ~
+    App\Service\RefundService: ~
 

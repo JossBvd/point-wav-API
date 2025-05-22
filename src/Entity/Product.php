@@ -15,7 +15,7 @@ class Product
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['product:read', 'image:read'])]
+    #[Groups(['product:read', 'image:read','order_product:read' ])]
     private ?int $id = null;
 
     #[ORM\Column(length: 50)]

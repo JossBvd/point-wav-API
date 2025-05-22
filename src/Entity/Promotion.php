@@ -14,31 +14,39 @@ class Promotion
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['order:read'])]
+    #[Groups(['order:read','promotion:read', 'promotion_user:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups(['promotion:read'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 50, unique: true)]
+    #[Groups(['promotion:read'])]
     private ?string $code = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups(['promotion:read'])]
     private ?string $reductionType = null;
 
     #[ORM\Column]
+    #[Groups(['promotion:read'])]
     private ?int $reductionValue = null;
 
     #[ORM\Column]
+    #[Groups(['promotion:read'])]
     private ?\DateTimeImmutable $startDate = null;
 
     #[ORM\Column]
+    #[Groups(['promotion:read'])]
     private ?\DateTimeImmutable $endDate = null;
 
     #[ORM\Column]
+    #[Groups(['promotion:read'])]
     private ?bool $isActive = null;
 
     #[ORM\Column]
+    #[Groups(['promotion:read'])]
     private ?\DateTimeImmutable $registrationDate = null;
 
     /**
