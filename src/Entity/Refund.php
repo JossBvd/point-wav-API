@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\RefundRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: RefundRepository::class)]
 class Refund
@@ -11,22 +12,28 @@ class Refund
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups('refund:read')]
     private ?int $id = null;
 
     #[ORM\Column]
+    #[Groups('refund:read')]
     private ?int $refundedQuantity = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups('refund:read')]
     private ?string $status = null;
 
     #[ORM\Column]
+    #[Groups('refund:read')]
     private ?\DateTimeImmutable $refundDate = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable:true)]
+    #[Groups('refund:read')]
     private ?string $stripeRefundId = null;
 
     #[ORM\ManyToOne(inversedBy: 'refunds')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups('refund:read')]
     private ?OrderProduct $orderProduct = null;
 
     public function getId(): ?int

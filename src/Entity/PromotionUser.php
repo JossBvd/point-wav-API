@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\PromotionUserRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: PromotionUserRepository::class)]
 class PromotionUser
@@ -11,17 +12,21 @@ class PromotionUser
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups('promotion_user:read')]
     private ?int $id = null;
 
     #[ORM\Column]
+    #[Groups('promotion_user:read')]
     private ?\DateTimeImmutable $usedDate = null;
 
     #[ORM\ManyToOne(inversedBy: 'promotionUsers')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups('promotion_user:read')]
     private ?Promotion $promotion = null;
 
     #[ORM\ManyToOne(inversedBy: 'promotionUsers')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups('promotion_user:read')]
     private ?User $user = null;
 
     public function getId(): ?int
